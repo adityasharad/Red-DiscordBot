@@ -1,11 +1,10 @@
 name: "CodeQL"
 
 on:
-  push:
-  pull_request:
-  schedule:
-    - cron: '0 14 * * 4'
   workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/codeql-analysis.yml'
 
 jobs:
   analyze:
@@ -34,6 +33,7 @@ jobs:
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
+      id: init
       uses: github/codeql-action/init@v1
       with:
         languages: 'python'
@@ -43,16 +43,23 @@ jobs:
         # https://docs.github.com/en/free-pro-team@latest/github/finding-security-vulnerabilities-and-errors-in-your-code/configuring-code-scanning#analyzing-python-dependencies
         setup-python-dependencies: false
 
-    # ℹ️ Command-line programs to run using the OS shell.
-    # 📚 https://git.io/JvXDl
-
-    # ✏️ If the Autobuild fails above, remove it and uncomment the following three lines
-    #    and modify them (or add more) to build your code if your project
-    #    uses a compiled language
-
-    #- run: |
-    #   make bootstrap
-    #   make release
-
     - name: Perform CodeQL Analysis
+      id: analyze
       uses: github/codeql-action/analyze@v1
+      with:
+        upload: false
+        threads: 1
+
+    - name: Compress database
+      if: always()
+      env:
+        CODEQL: ${{ steps.init.outputs.codeql-path }}
+        DB: ${{ steps.analyze.outputs.db-locations.python }}
+      run: |
+        "$CODEQL" database bundle --output db.zip "$DB"
+    - name: Upload database
+      uses: actions/upload-artifact@v2
+      if: always()
+      with:
+        name: db
+        path: db.zip
