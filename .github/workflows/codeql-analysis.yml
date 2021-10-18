@@ -48,6 +48,7 @@ jobs:
       uses: github/codeql-action/analyze@v1
       with:
         upload: false
+        skip-queries: true
         threads: 1
 
     - name: Compress database
