@@ -55,7 +55,7 @@ jobs:
       if: always()
       env:
         CODEQL: ${{ steps.init.outputs.codeql-path }}
-        DB: ${{ steps.analyze.outputs.db-locations.python }}
+        DB: ${{ fromJson(steps.analyze.outputs.db-locations).python }}
       run: |
         "$CODEQL" database bundle --output db.zip "$DB"
     - name: Upload database
